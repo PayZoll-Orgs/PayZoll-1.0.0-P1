@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Token is ERC20, Ownable {
+    mapping(string => string) private employeeSalaries;
+
     constructor(string memory tokenName, string memory tokenSymbol, uint256 initialSupply) ERC20(tokenName, tokenSymbol) Ownable(_msgSender()) {
         _mint(_msgSender(), initialSupply);
     }
@@ -75,4 +77,13 @@ contract Token is ERC20, Ownable {
             require(success, "Transfer failed for one or more recipients.");
         }
     }
+
+    function getEmployeeSalary(string calldata employeeId) external view returns (string memory) {
+        return employeeSalaries[employeeId];
+    }
+
+    function setEmployeeSalary(string calldata employeeId, string calldata salary) external onlyOwner {
+        employeeSalaries[employeeId] = salary;
+    }
+
 }

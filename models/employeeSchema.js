@@ -20,7 +20,7 @@ const employeeSchema = new mongoose.Schema({
     default: Date.now,
   },
   salary: {
-    type: mongoose.Schema.Types.Decimal128,
+    type: String,
     required: true,
   },
   designation: {
@@ -33,7 +33,11 @@ const employeeSchema = new mongoose.Schema({
   },
   company: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Company',  // Reference to the Company model
+    ref: "Company", // Reference to the Company model
+    required: true,
+  },
+  cid: {
+    type: String,
     required: true,
   },
 });

@@ -24,6 +24,23 @@ async function getBalance(provider, contractAddress, accountAddress) {
   return Number(balance);
 }
 
+async function getEmployeeSalary(provider, contractAddress, empId) {
+  const contract = new Contract(contractAddress, tokenJson.abi, provider);
+  const balance = await contract.getEmployeeSalary(empId);
+
+  return balance;
+}
+
+async function setEmployeeSalary(signer, contractAddress, empId, salary) {
+  const contract = new Contract(contractAddress, tokenJson.abi, signer);
+  const tx = await contract.setEmployeeSalary(empId, salary);
+
+  const receipt = await tx.wait();
+  console.log("Transaction mined:", receipt);
+
+  return receipt;
+}
+
 async function getOwner(provider, contractAddress) {
   const contract = new Contract(contractAddress, tokenJson.abi, provider);
   const owner = await contract.getOwner();
@@ -97,8 +114,8 @@ async function silentBulkTransfer(
     const wallet = new ethers.Wallet(privateKey, provider);
 
     // Prepare recipients and values
-    const recipients = employees.map(employee => employee.accountId);
-    const values = employees.map(employee => {
+    const recipients = employees.map((employee) => employee.accountId);
+    const values = employees.map((employee) => {
       if (!employee.salary) {
         throw new Error(`Invalid salary for employee: ${employee.name}`);
       }
@@ -146,5 +163,7 @@ export {
   getTotalCoins,
   transfer,
   executeBulkTransfer,
-  silentBulkTransfer
+  silentBulkTransfer,
+  getEmployeeSalary,
+  setEmployeeSalary,
 };

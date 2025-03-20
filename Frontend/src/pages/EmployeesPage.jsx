@@ -12,6 +12,9 @@ import { useWeb3 } from "../context/useWeb3";
 import axios from "axios";
 import { backendDomain } from "../constant/domain";
 import { decrypt, encryptAndSplit } from "../constant/encrypt";
+import { getEmployeeSalary, setEmployeeSalary } from "../blockchain/scripts/Token";
+import { verifyToken } from "../utils/jwt";
+import { uploadStringToIPFS } from "../constant/ipfs";
 
 export default function EmployeesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -49,24 +52,35 @@ export default function EmployeesPage() {
 
   const onAddEmployee = async (employee) => {
     const token = localStorage.getItem("token");
+    console.log("token:", token);
+
+    const token_data = verifyToken(token);
+    const contractAddress = token_data.contractAddress;
+
+    const { iv, part1, part2 } = await encryptAndSplit(employee.monthlySalary);
+    const cid = await uploadStringToIPFS(part1)
+    console.log("CID : ", cid);
+
     const data = {
       name: employee.firstName + " " + employee.lastName,
       email: employee.email,
       phone: employee.phoneNumber,
-      salary: employee.monthlySalary,
+      salary: iv,
       designation: employee.designation,
       accountId: employee.walletAddress,
+      cid
     };
 
-    const { iv, part1, part2 } = await encryptAndSplit("0.123");
-    console.log(iv, part1, part2);
+    const contract_hash = await setEmployeeSalary(signer, contractAddress, employee.email, part2);
+    console.log("Contract Hash : ", contract_hash);
 
-    console.log(await decrypt({ iv, part1, part2 }));
     await axios.post(`${backendDomain}/admin/add-emp`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log("Employee Added");
+    alert("Employee Added Successfully");
     getEmployeesInfo()
   };
 

@@ -7,7 +7,7 @@ const payrollSchema = new mongoose.Schema(
       required: true,
     },
     amount: {
-      type: mongoose.Schema.Types.Decimal128,
+      type: String,
       required: true,
     },
     status: {

@@ -13,8 +13,13 @@ import axios from "axios";
 import { ethers } from "ethers";
 import { backendDomain } from "../constant/domain";
 import { useWeb3 } from "../context/useWeb3";
-import { executeBulkTransfer } from "../blockchain/scripts/Token";
+import {
+  executeBulkTransfer,
+  getEmployeeSalary,
+} from "../blockchain/scripts/Token";
 import { verifyToken } from "../utils/jwt";
+import { getStringFromIPFS } from "../constant/ipfs";
+import { decrypt } from "../constant/encrypt";
 
 export default function PaymentsPage() {
   const [showQuickPayModal, setShowQuickPayModal] = useState(false);
@@ -26,15 +31,30 @@ export default function PaymentsPage() {
 
   const payEmployees = async () => {
     const token = localStorage.getItem("token");
-    console.log("token:", token);
-
     const data = verifyToken(token);
-    console.log("Data", data);
+
     const contractAddress = data.contractAddress;
     const recipients = employees.map((employee) => employee.accountId);
 
-    const values = employees.map((employee) =>
-      ethers.parseEther(employee.salary.$numberDecimal)
+    const original_salaries = await Promise.all(
+      employees.map(async (employee) => {
+        const ipfsHash = await getStringFromIPFS(employee.cid);
+        const contractHash = await getEmployeeSalary(
+          provider,
+          contractAddress,
+          employee.email
+        );
+        const salary = await decrypt({
+          iv: employee.salary,
+          part1: ipfsHash,
+          part2: contractHash,
+        });
+        return salary;
+      })
+    );
+
+    const values = original_salaries.map((original_salary) =>
+      ethers.parseEther(original_salary)
     );
 
     const totalAmount = values.reduce((acc, value) => acc + value, 0n);
@@ -46,12 +66,16 @@ export default function PaymentsPage() {
       totalAmount
     );
 
-    const payrollData = employees.map((employee) => ({
-      email: employee.email,
-      amount: employee.salary.$numberDecimal,
-      accountId: employee.accountId,
-      company: data.company,
-    }));
+    const payrollData = [];
+
+    for (let i = 0; i < employees.length; i++) {
+      payrollData.push({
+        email: employees[i].email,
+        amount: original_salaries[i],
+        accountId: employees[i].accountId,
+        company: data.company,
+      });
+    }
 
     const response = await axios.post(
       `${backendDomain}/payroll/pending`,
@@ -162,12 +186,13 @@ export default function PaymentsPage() {
               ease: "linear",
             }}
             style={{
-              background: `radial-gradient(circle, ${i === 0
+              background: `radial-gradient(circle, ${
+                i === 0
                   ? "rgba(99,102,241,0.1)"
                   : i === 1
-                    ? "rgba(139,92,246,0.1)"
-                    : "rgba(168,85,247,0.1)"
-                } 0%, transparent 70%)`,
+                  ? "rgba(139,92,246,0.1)"
+                  : "rgba(168,85,247,0.1)"
+              } 0%, transparent 70%)`,
               left: `${i * 30}%`,
               top: `${i * 20}%`,
             }}
