@@ -11,6 +11,7 @@ import BulkUploadModal from "../components/employees/BulkUploadModal";
 import { useWeb3 } from "../context/useWeb3";
 import axios from "axios";
 import { backendDomain } from "../constant/domain";
+import { decrypt, encryptAndSplit } from "../constant/encrypt";
 
 export default function EmployeesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -56,6 +57,11 @@ export default function EmployeesPage() {
       designation: employee.designation,
       accountId: employee.walletAddress,
     };
+
+    const { iv, part1, part2 } = await encryptAndSplit("0.123");
+    console.log(iv, part1, part2);
+
+    console.log(await decrypt({ iv, part1, part2 }));
     await axios.post(`${backendDomain}/admin/add-emp`, data, {
       headers: {
         Authorization: `Bearer ${token}`,
