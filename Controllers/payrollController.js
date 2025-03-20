@@ -101,7 +101,7 @@ const getPayrollTotalsByCompanyAndDate = async (req, res) => {
         $project: {
           company: 1,
           createdAt: 1,
-          amount: 1,
+          amount: { $toDouble: "$amount" },
           createdAtFormatted: {
             $dateToString: { format: "%Y-%m-%d", date: "$createdAt" },
           }, // Format createdAt to group by date only

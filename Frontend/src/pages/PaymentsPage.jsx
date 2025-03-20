@@ -135,8 +135,10 @@ export default function PaymentsPage() {
   };
 
   const totalSalaryPaid = () => {
+    console.log("Payrol  ");
+    console.log(payrollHistory);
     return payrollHistory.reduce((sum, item) => {
-      return sum + parseFloat(item.totalAmount.$numberDecimal);
+      return sum + parseFloat(item.totalAmount);
     }, 0);
   };
 
