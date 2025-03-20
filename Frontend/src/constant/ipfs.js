@@ -1,6 +1,6 @@
-const apiKey = "e4d28c2648a2abf9c824";
-const apiSecret =
-  "039d3a751fd2c65c7f2ef4f2ef71b82af3985517e2373228f258ca3527a82fdd";
+const apiKey = import.meta.env.VITE_API_KEY;
+const apiSecret = import.meta.env.VITE_SECRET_KEY;
+
 
 export async function uploadStringToIPFS(data) {
   const url = "https://api.pinata.cloud/pinning/pinJSONToIPFS";
